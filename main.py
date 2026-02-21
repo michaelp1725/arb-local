@@ -46,3 +46,24 @@ def get_events():
 def get_arbitrage():
     """Return arbitrage opportunities for all events."""
     return find_arbitrage(events)
+
+
+@app.post("/calculate")
+def calculate_stakes(data: dict):
+    """Calculate optimal stake split for two odds."""
+    bankroll = float(data["bankroll"])
+    odds1 = float(data["odds1"])
+    odds2 = float(data["odds2"])
+
+    inv1 = 1 / odds1
+    inv2 = 1 / odds2
+    total_inv = inv1 + inv2
+    stake1 = bankroll * (inv1 / total_inv)
+    stake2 = bankroll - stake1
+    profit = (stake1 * odds1) - bankroll
+
+    return {
+        "stake1": round(stake1, 2),
+        "stake2": round(stake2, 2),
+        "profit": round(profit, 2)
+    }
