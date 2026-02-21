@@ -79,6 +79,18 @@
             }
         }
 
+        async function handleCalculate(odds1, odds2) {
+            const bankroll = prompt('Enter bankroll amount:');
+            if (!bankroll || isNaN(parseFloat(bankroll))) return;
+            const res = await fetch('/calculate', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ bankroll: parseFloat(bankroll), odds1: parseFloat(odds1), odds2: parseFloat(odds2) })
+            });
+            const data = await res.json();
+            alert(`Stake 1: $${data.stake1}\nStake 2: $${data.stake2}\nGuaranteed profit: $${data.profit}`);
+        }
+
         load();
     </script>
 </body>
