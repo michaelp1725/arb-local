@@ -32,3 +32,9 @@ events = [
 ]
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
+
+
+@app.get("/events")
+def get_events():
+    """Return all sample events."""
+    return events
