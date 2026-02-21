@@ -2,9 +2,33 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Arb Local</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arb Local - Arbitrage Finder</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-top: 16px; }
+        th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
+        th { background: #333; color: white; }
+        tr.arb { background: #d4edda !important; }
+        button { padding: 8px 16px; cursor: pointer; margin-top: 8px; }
+    </style>
 </head>
 <body>
     <h1>Arbitrage Finder</h1>
+    <p>Sample betting events. Rows with ⭐ have arbitrage.</p>
+    <table id="events-table">
+        <thead>
+            <tr>
+                <th>Sport</th>
+                <th>Event</th>
+                <th>Market</th>
+                <th>Best Odds</th>
+                <th></th>
+                <th>Profit %</th>
+                <th>Action</th>
+            </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+    </table>
 </body>
 </html>
