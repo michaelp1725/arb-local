@@ -1,6 +1,8 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
+from arbitrage import find_arbitrage
+
 app = FastAPI()
 
 # Sample odds (in memory)
@@ -38,3 +40,9 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 def get_events():
     """Return all sample events."""
     return events
+
+
+@app.get("/arbitrage")
+def get_arbitrage():
+    """Return arbitrage opportunities for all events."""
+    return find_arbitrage(events)
