@@ -30,5 +30,56 @@
         </thead>
         <tbody id="tbody"></tbody>
     </table>
+
+    <script>
+        let events = [];
+        let arbs = [];
+
+        async function load() {
+            const [eventsRes, arbsRes] = await Promise.all([
+                fetch('/events'),
+                fetch('/arbitrage')
+            ]);
+            events = await eventsRes.json();
+            arbs = await arbsRes.json();
+            render();
+        }
+
+        function getArb(eventId) {
+            return arbs.find(a => a.event_id === eventId);
+        }
+
+        function render() {
+            const tbody = document.getElementById('tbody');
+            tbody.innerHTML = '';
+            for (const e of events) {
+                const arb = getArb(e.id);
+                const isArb = !!arb;
+                const bestOdds = arb
+                    ? `${arb.best_odds.team1.team} @ ${arb.best_odds.team1.odds} (${arb.best_odds.team1.book}) / ${arb.best_odds.team2.team} @ ${arb.best_odds.team2.odds} (${arb.best_odds.team2.book})`
+                    : '-';
+                const profit = arb ? arb.profit_percent + '%' : '-';
+                const star = isArb ? '⭐' : '';
+                const row = document.createElement('tr');
+                if (isArb) row.classList.add('arb');
+                row.innerHTML = `
+                    <td>${e.sport}</td>
+                    <td>${e.event}</td>
+                    <td>${e.market}</td>
+                    <td>${bestOdds}</td>
+                    <td>${star}</td>
+                    <td>${profit}</td>
+                    <td>
+                        ${isArb ? `<button data-odds1="${arb.best_odds.team1.odds}" data-odds2="${arb.best_odds.team2.odds}">Calculate Stakes</button>` : '-'}
+                    </td>
+                `;
+                const btn = row.querySelector('button');
+                if (btn) btn.onclick = () => handleCalculate(btn.dataset.odds1, btn.dataset.odds2);
+                tbody.appendChild(row);
+            }
+        }
+
+        load();
+    </script>
 </body>
 </html>
