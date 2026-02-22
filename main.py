@@ -1,12 +1,20 @@
+import os
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 
 from arbitrage import find_arbitrage
+from odds_api import fetch_odds, clear_cache
 
 app = FastAPI()
+ODDS_API_KEY = os.getenv("ODDS_API_KEY")
 
-# Sample odds (in memory)
-events = [
+# Sample odds (fallback when no API key)
+SAMPLE_EVENTS = [
     {
         "id": 1,
         "sport": "NBA",
@@ -33,19 +41,35 @@ events = [
     }
 ]
 
+
+def _get_events():
+    """Return events from API if key set, else sample data."""
+    if ODDS_API_KEY:
+        events = fetch_odds(ODDS_API_KEY)
+        return events if events else SAMPLE_EVENTS
+    return SAMPLE_EVENTS
+
+
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 
 @app.get("/events")
 def get_events():
-    """Return all sample events."""
-    return events
+    """Return events (live from API or sample)."""
+    return _get_events()
 
 
 @app.get("/arbitrage")
 def get_arbitrage():
     """Return arbitrage opportunities for all events."""
-    return find_arbitrage(events)
+    return find_arbitrage(_get_events())
+
+
+@app.post("/refresh")
+def refresh():
+    """Clear cache so next fetch gets fresh odds from API."""
+    clear_cache()
+    return {"ok": True}
 
 
 @app.post("/calculate")
