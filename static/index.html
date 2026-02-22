@@ -15,7 +15,7 @@
 </head>
 <body>
     <h1>Arbitrage Finder</h1>
-    <p>Sample betting events. Rows with ⭐ have arbitrage.</p>
+    <p>Live odds from The Odds API. Rows with ⭐ have arbitrage. <button id="refresh-btn">Refresh Odds</button></p>
     <table id="events-table">
         <thead>
             <tr>
@@ -91,6 +91,7 @@
             alert(`Stake 1: $${data.stake1}\nStake 2: $${data.stake2}\nGuaranteed profit: $${data.profit}`);
         }
 
+        document.getElementById('refresh-btn').onclick = () => { load(); };
         load();
     </script>
 </body>
