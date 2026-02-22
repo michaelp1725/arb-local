@@ -4,18 +4,152 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arb Local - Arbitrage Finder</title>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
     <style>
-        body { font-family: sans-serif; margin: 20px; }
-        table { border-collapse: collapse; width: 100%; margin-top: 16px; }
-        th, td { border: 1px solid #ddd; padding: 8px 12px; text-align: left; }
-        th { background: #333; color: white; }
-        tr.arb { background: #d4edda !important; }
-        button { padding: 8px 16px; cursor: pointer; margin-top: 8px; }
+        :root {
+            --bg: #0f172a;
+            --card: #1e293b;
+            --accent: #22c55e;
+            --accent-dark: #16a34a;
+            --text: #f1f5f9;
+            --muted: #94a3b8;
+            --danger: #ef4444;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding: 40px 20px;
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: auto;
+            background: var(--card);
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.4);
+        }
+
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .description {
+            color: var(--muted);
+            font-size: 14px;
+        }
+
+        button {
+            background: var(--accent);
+            border: none;
+            padding: 10px 18px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background: var(--accent-dark);
+            transform: translateY(-1px);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 14px 12px;
+            text-align: left;
+        }
+
+        th {
+            font-size: 13px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--muted);
+            border-bottom: 1px solid #334155;
+        }
+
+        td {
+            border-bottom: 1px solid #1e293b;
+            font-size: 14px;
+        }
+
+        tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        tr.arb {
+            background: rgba(34,197,94,0.12);
+        }
+
+        tr.arb td {
+            border-color: rgba(34,197,94,0.25);
+        }
+
+        .profit {
+            font-weight: 600;
+            color: var(--accent);
+        }
+
+        .star {
+            font-size: 18px;
+        }
+
+        .calculate-btn {
+            background: #3b82f6;
+        }
+
+        .calculate-btn:hover {
+            background: #2563eb;
+        }
+
+        @media (max-width: 900px) {
+            table {
+                font-size: 12px;
+            }
+            th, td {
+                padding: 10px 8px;
+            }
+        }
     </style>
 </head>
 <body>
+
+<div class="container">
     <h1>Arbitrage Finder</h1>
-    <p>Live odds from The Odds API. Rows with ⭐ have arbitrage. <button id="refresh-btn">Refresh Odds</button></p>
+
+    <div class="top-bar">
+        <div class="description">
+            Live odds from The Odds API. ⭐ indicates arbitrage opportunity.
+        </div>
+        <button id="refresh-btn">Refresh Odds</button>
+    </div>
+
     <table id="events-table">
         <thead>
             <tr>
@@ -30,69 +164,89 @@
         </thead>
         <tbody id="tbody"></tbody>
     </table>
+</div>
 
-    <script>
-        let events = [];
-        let arbs = [];
+<script>
+    let events = [];
+    let arbs = [];
 
-        async function load() {
-            const [eventsRes, arbsRes] = await Promise.all([
-                fetch('/events'),
-                fetch('/arbitrage')
-            ]);
-            events = await eventsRes.json();
-            arbs = await arbsRes.json();
-            render();
+    async function load() {
+        const [eventsRes, arbsRes] = await Promise.all([
+            fetch('/events'),
+            fetch('/arbitrage')
+        ]);
+        events = await eventsRes.json();
+        arbs = await arbsRes.json();
+        render();
+    }
+
+    function getArb(eventId) {
+        return arbs.find(a => a.event_id === eventId);
+    }
+
+    function render() {
+        const tbody = document.getElementById('tbody');
+        tbody.innerHTML = '';
+        for (const e of events) {
+            const arb = getArb(e.id);
+            const isArb = !!arb;
+
+            const bestOdds = arb
+                ? `${arb.best_odds.team1.team} @ ${arb.best_odds.team1.odds} (${arb.best_odds.team1.book}) / 
+                   ${arb.best_odds.team2.team} @ ${arb.best_odds.team2.odds} (${arb.best_odds.team2.book})`
+                : '-';
+
+            const profit = arb ? `<span class="profit">${arb.profit_percent}%</span>` : '-';
+            const star = isArb ? '<span class="star">⭐</span>' : '';
+
+            const row = document.createElement('tr');
+            if (isArb) row.classList.add('arb');
+
+            row.innerHTML = `
+                <td>${e.sport}</td>
+                <td>${e.event}</td>
+                <td>${e.market}</td>
+                <td>${bestOdds}</td>
+                <td>${star}</td>
+                <td>${profit}</td>
+                <td>
+                    ${isArb ? `<button class="calculate-btn" data-odds1="${arb.best_odds.team1.odds}" data-odds2="${arb.best_odds.team2.odds}">Calculate</button>` : '-'}
+                </td>
+            `;
+
+            const btn = row.querySelector('button');
+            if (btn) btn.onclick = () => handleCalculate(btn.dataset.odds1, btn.dataset.odds2);
+
+            tbody.appendChild(row);
         }
+    }
 
-        function getArb(eventId) {
-            return arbs.find(a => a.event_id === eventId);
-        }
+    async function handleCalculate(odds1, odds2) {
+        const bankroll = prompt('Enter bankroll amount:');
+        if (!bankroll || isNaN(parseFloat(bankroll))) return;
 
-        function render() {
-            const tbody = document.getElementById('tbody');
-            tbody.innerHTML = '';
-            for (const e of events) {
-                const arb = getArb(e.id);
-                const isArb = !!arb;
-                const bestOdds = arb
-                    ? `${arb.best_odds.team1.team} @ ${arb.best_odds.team1.odds} (${arb.best_odds.team1.book}) / ${arb.best_odds.team2.team} @ ${arb.best_odds.team2.odds} (${arb.best_odds.team2.book})`
-                    : '-';
-                const profit = arb ? arb.profit_percent + '%' : '-';
-                const star = isArb ? '⭐' : '';
-                const row = document.createElement('tr');
-                if (isArb) row.classList.add('arb');
-                row.innerHTML = `
-                    <td>${e.sport}</td>
-                    <td>${e.event}</td>
-                    <td>${e.market}</td>
-                    <td>${bestOdds}</td>
-                    <td>${star}</td>
-                    <td>${profit}</td>
-                    <td>
-                        ${isArb ? `<button data-odds1="${arb.best_odds.team1.odds}" data-odds2="${arb.best_odds.team2.odds}">Calculate Stakes</button>` : '-'}
-                    </td>
-                `;
-                const btn = row.querySelector('button');
-                if (btn) btn.onclick = () => handleCalculate(btn.dataset.odds1, btn.dataset.odds2);
-                tbody.appendChild(row);
-            }
-        }
+        const res = await fetch('/calculate', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                bankroll: parseFloat(bankroll),
+                odds1: parseFloat(odds1),
+                odds2: parseFloat(odds2)
+            })
+        });
 
-        async function handleCalculate(odds1, odds2) {
-            const bankroll = prompt('Enter bankroll amount:');
-            if (!bankroll || isNaN(parseFloat(bankroll))) return;
-            const res = await fetch('/calculate', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ bankroll: parseFloat(bankroll), odds1: parseFloat(odds1), odds2: parseFloat(odds2) })
-            });
-            const data = await res.json();
-            alert(`Stake 1: $${data.stake1}\nStake 2: $${data.stake2}\nGuaranteed profit: $${data.profit}`);
-        }
+        const data = await res.json();
 
-        document.getElementById('refresh-btn').onclick = () => { load(); };
-        load();
-    </script>
+        alert(
+            `Stake 1: $${data.stake1}\n` +
+            `Stake 2: $${data.stake2}\n` +
+            `Guaranteed profit: $${data.profit}`
+        );
+    }
+
+    document.getElementById('refresh-btn').onclick = () => load();
+    load();
+</script>
+
 </body>
 </html>

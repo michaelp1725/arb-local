@@ -7,7 +7,7 @@ import time
 import requests
 
 API_BASE = "https://api.the-odds-api.com/v4"
-CACHE_TTL_SEC = 43200  # 12 hours (2 fetches per day = ~60/month, under 500 limit)
+CACHE_TTL_SEC = 7200  # 12 hours (2 fetches per day = ~60/month, under 500 limit)
 _cache = {"events": None, "fetched_at": 0}
 
 
